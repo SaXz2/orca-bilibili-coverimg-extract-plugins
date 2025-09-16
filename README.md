@@ -56,33 +56,6 @@ orca-bilibili-image-plugin/
 3. 点击执行相同的自动化操作
 
 
-## 项目结构
-
-### 🔧 配置选项
-插件使用以下默认配置：
-
-```typescript
-// 网络请求配置
-const NETWORK_CONFIG = {
-  timeout: 10000, // 10秒超时
-  retryAttempts: 3, // 重试3次
-  retryDelay: 1000, // 重试延迟1秒
-};
-
-// 缓存配置
-const CACHE_CONFIG = {
-  maxSize: 100, // 最大缓存条目数
-  ttl: 30 * 60 * 1000, // 缓存30分钟
-};
-
-// 延迟配置
-const DELAY_CONFIG = {
-  imageProcessing: 500, // 图片处理延迟
-  bilibiliProcessing: 1000, // B站链接处理延迟
-  debounceDelay: 300, // 防抖延迟
-};
-```
-
 ### 📊 工作原理
 
 #### 初始化流程
@@ -98,35 +71,6 @@ const DELAY_CONFIG = {
 4. **图片插入**：检查重复后插入网络图片
 5. **标签添加**：添加"哔哩哔哩"和"哔哩UP"标签
 
-#### 数据结构
-插件操作的数据结构：
-
-```typescript
-// 视频信息接口
-interface VideoInfo {
-  coverUrl: string | null;
-  upName: string | null;
-  title: string | null;
-}
-
-// 内容片段接口
-interface ContentFragment {
-  t: string; // 类型
-  v?: string; // 值
-  l?: string; // 链接
-  f?: string; // 格式
-  src?: string; // 图片源
-  alt?: string; // 图片描述
-}
-
-// 块接口
-interface Block {
-  id: number;
-  content?: ContentFragment[];
-  text?: string;
-  children?: number[];
-}
-```
 
 ## 🐛 故障排除
 
