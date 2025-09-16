@@ -39,12 +39,31 @@ jobs:
         path: dist/
         retention-days: 30
         
-    - name: List files in dist
+    - name: Create plugin package structure
+      if: startsWith(github.ref, 'refs/tags/')
       run: |
-        echo "Files in dist directory:"
-        ls -la dist/ || echo "dist directory not found"
-        echo "Files in root directory:"
-        ls -la
+        # 创建插件文件夹
+        mkdir -p orca-bilibili-coverimg-extract-plugins/dist
+        mkdir -p orca-bilibili-coverimg-extract-plugins
+        
+        # 复制必要文件到插件文件夹
+        cp dist/index.js orca-bilibili-coverimg-extract-plugins/dist/
+        cp icon.png orca-bilibili-coverimg-extract-plugins/
+        cp README.md orca-bilibili-coverimg-extract-plugins/
+        
+        # 显示插件文件夹结构
+        echo "Plugin folder structure:"
+        find orca-bilibili-coverimg-extract-plugins -type f | sort
+        
+    - name: Create plugin ZIP package
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        # 创建ZIP压缩包
+        zip -r orca-bilibili-coverimg-extract-plugins.zip orca-bilibili-coverimg-extract-plugins/
+        
+        # 显示ZIP内容
+        echo "ZIP package contents:"
+        unzip -l orca-bilibili-coverimg-extract-plugins.zip
         
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -58,35 +77,13 @@ jobs:
         draft: false
         prerelease: false
         
-    - name: Upload dist/index.js
+    - name: Upload plugin ZIP package
       if: startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/index.js
-        asset_name: index.js
-        asset_content_type: application/javascript
-        
-    - name: Upload dist/index.js.map
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/index.js.map
-        asset_name: index.js.map
-        asset_content_type: application/json
-        
-    - name: Upload icon.png
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./icon.png
-        asset_name: icon.png
-        asset_content_type: image/png
+        asset_path: ./orca-bilibili-coverimg-extract-plugins.zip
+        asset_name: orca-bilibili-coverimg-extract-plugins.zip
+        asset_content_type: application/zip

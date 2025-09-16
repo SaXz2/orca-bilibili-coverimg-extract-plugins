@@ -25,7 +25,7 @@ export default defineConfig({
     // 确保输出符合 Orca 插件规范
     target: 'es2020',
     minify: false, // 保持代码可读性
-    sourcemap: true
+    sourcemap: false // Orca插件不需要sourcemap
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
