@@ -1,0 +1,211 @@
+# Orca Bilibili Image Plugin
+
+一个为 Orca Note 设计的智能哔哩哔哩视频信息提取插件，自动检测B站链接并提取封面图片、UP主信息等，让笔记管理更加高效。
+
+## ✨ 功能特性
+
+- 🎬 **智能视频信息提取**：自动识别BV号和av号格式的B站视频链接
+- 🖼️ **封面图片提取**：自动获取视频封面图片并插入到笔记中
+- 👤 **UP主名称获取**：提取并显示UP主名称
+- 🔄 **自动化处理**：粘贴B站链接时自动执行提取操作
+- 🖱️ **智能右键菜单**：只在包含B站链接的块中显示相关选项
+- 🚫 **去重检测**：智能检测已存在的封面，避免重复添加
+- ⚡ **性能优化**：网络超时控制、重试机制、缓存系统、防抖机制
+
+## 使用
+
+在右侧 Releases 选择最新版本下载，插件放置到对应位置以后需要重启 Orca Note
+
+## 插件结构目录
+
+```
+orca-bilibili-image-plugin/
+├── dist/                     # 编译后的代码
+│   └── index.js              # 插件主文件
+├── src/
+│   ├── main.ts               # 插件入口文件
+│   ├── orca.d.ts             # Orca API 类型定义
+│   ├── libs/
+│   │   └── l10n.ts           # 国际化支持
+│   └── translations/
+│       └── zhCN.ts           # 中文翻译
+├── plugin-docs/              # 插件文档
+├── package.json              # 项目配置
+├── tsconfig.json             # TypeScript 配置
+├── vite.config.ts            # Vite 构建配置
+└── README.md                 # 项目说明
+```
+
+## 使用方法
+
+### 方法一：自动化处理（推荐）
+1. 复制B站视频链接，例如：
+   ```
+   https://www.bilibili.com/video/BV1GJ411x7h7
+   ```
+2. 粘贴到虎鲸笔记的任意块中（Ctrl+V）
+3. 插件自动执行：
+   - ✅ 提取视频封面并插入为网络图片子块
+   - ✅ 获取UP主名称并添加"哔哩UP：UP名称"标签
+   - ✅ 添加"哔哩哔哩"标签
+   - ✅ 显示处理结果通知
+
+### 方法二：使用智能右键菜单
+1. 在包含B站链接的块上右键点击拖拽手柄
+2. 只有包含B站链接的块才会显示"🎬 提取B站视频信息"选项
+3. 点击执行相同的自动化操作
+
+
+## 项目结构
+
+### 🔧 配置选项
+插件使用以下默认配置：
+
+```typescript
+// 网络请求配置
+const NETWORK_CONFIG = {
+  timeout: 10000, // 10秒超时
+  retryAttempts: 3, // 重试3次
+  retryDelay: 1000, // 重试延迟1秒
+};
+
+// 缓存配置
+const CACHE_CONFIG = {
+  maxSize: 100, // 最大缓存条目数
+  ttl: 30 * 60 * 1000, // 缓存30分钟
+};
+
+// 延迟配置
+const DELAY_CONFIG = {
+  imageProcessing: 500, // 图片处理延迟
+  bilibiliProcessing: 1000, // B站链接处理延迟
+  debounceDelay: 300, // 防抖延迟
+};
+```
+
+### 📊 工作原理
+
+#### 初始化流程
+1. **插件加载**：注册编辑器命令和块右键菜单
+2. **事件监听**：监听粘贴事件，自动检测B站链接
+3. **缓存初始化**：创建内存缓存系统
+4. **防抖设置**：配置防抖机制避免重复处理
+
+#### 处理机制
+1. **链接检测**：使用正则表达式检测B站视频链接
+2. **视频信息获取**：抓取B站页面获取封面、UP主、标题
+3. **缓存检查**：优先使用缓存，避免重复请求
+4. **图片插入**：检查重复后插入网络图片
+5. **标签添加**：添加"哔哩哔哩"和"哔哩UP"标签
+
+#### 数据结构
+插件操作的数据结构：
+
+```typescript
+// 视频信息接口
+interface VideoInfo {
+  coverUrl: string | null;
+  upName: string | null;
+  title: string | null;
+}
+
+// 内容片段接口
+interface ContentFragment {
+  t: string; // 类型
+  v?: string; // 值
+  l?: string; // 链接
+  f?: string; // 格式
+  src?: string; // 图片源
+  alt?: string; // 图片描述
+}
+
+// 块接口
+interface Block {
+  id: number;
+  content?: ContentFragment[];
+  text?: string;
+  children?: number[];
+}
+```
+
+## 🐛 故障排除
+
+### 常见问题
+
+**Q: 插件没有自动运行**
+- 检查插件是否已启用
+- 查看控制台是否有错误信息
+- 尝试重新启动 Orca Note
+
+**Q: 粘贴B站链接没有反应**
+- 检查网络连接是否正常
+- 确认粘贴的内容包含有效的B站链接
+- 查看控制台是否有错误信息
+
+**Q: 图片下载失败**
+- 检查网络连接
+- 确认图片URL是否有效
+- 查看控制台错误信息
+
+**Q: 右键菜单中没有选项**
+- 确认块中确实包含B站链接
+- 检查插件是否正确加载
+- 尝试重新加载页面
+
+### 调试信息
+打开开发者工具（F12）查看控制台输出：
+
+```javascript
+// 正常日志
+检测到粘贴内容: https://www.bilibili.com/video/BV1GJ411x7h7
+找到哔哩哔哩链接，自动执行提取操作
+从网络获取视频信息: BV1GJ411x7h7
+找到preview-img封面: https://i0.hdslb.com/bfs/archive/xxx.jpg
+成功插入网络图片: https://i0.hdslb.com/bfs/archive/xxx.jpg
+成功添加哔哩哔哩标签
+
+// 错误日志
+网络请求失败 (尝试 1/3): [错误信息]
+获取哔哩哔哩视频信息失败: [错误信息]
+```
+
+## 📝 更新日志
+
+### v1.0.0
+- 初始版本发布
+- 支持B站视频信息自动提取
+- 实现封面图片插入和标签管理
+- 添加网络优化和性能提升
+- 支持HTML图片标签处理
+- 实现去重检测和防抖机制
+- 添加完整的TypeScript类型定义
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 LICENSE 文件了解详情。
+
+## 🙏 致谢
+
+- Orca Note - 优秀的笔记应用
+- 哔哩哔哩 - 提供视频信息API
+- Orca Plugin Template - 插件开发模板
+
+## 📞 支持
+
+如果您遇到问题或有建议，请：
+
+1. 查看 **故障排除** 部分
+2. 搜索现有的 Issues
+3. 创建新的 Issue 并提供详细信息
+
+**注意**：本插件需要 Orca Note 的最新版本才能正常工作。

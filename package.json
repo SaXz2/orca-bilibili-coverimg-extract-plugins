@@ -1,0 +1,42 @@
+{
+  "name": "orca-bilibili-coverimg-extract-plugins",
+  "version": "1.0.0",
+  "description": "哔哩哔哩图片封面提取插件 - 自动提取B站视频封面并设置相关标签",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "orca",
+    "plugin",
+    "bilibili",
+    "b站",
+    "哔哩哔哩",
+    "image",
+    "cover",
+    "video"
+  ],
+  "author": "SaXz2",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "valtio": "^1.13.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SaXz2/orca-bilibili-coverimg-extract-plugins.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SaXz2/orca-bilibili-coverimg-extract-plugins/issues"
+  },
+  "homepage": "https://github.com/SaXz2/orca-bilibili-coverimg-extract-plugins#readme"
+}
