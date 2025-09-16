@@ -36,8 +36,15 @@ function hasBilibiliLink(block: Block): boolean {
   return BILIBILI_URL_REGEX.test(text);
 }
 
-// 获取封面URL
-async function getCoverUrl(videoId: string): Promise<string | null> {
+// 视频信息接口
+interface VideoInfo {
+  coverUrl: string | null;
+  upName: string | null;
+  title: string | null;
+}
+
+// 获取视频信息（封面、UP主名称、标题）
+async function getVideoInfo(videoId: string): Promise<VideoInfo> {
   try {
     const response = await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${videoId}`, {
       headers: {
@@ -46,16 +53,22 @@ async function getCoverUrl(videoId: string): Promise<string | null> {
       }
     });
     
-    if (!response.ok) return null;
-    
-    const data = await response.json();
-    if (data.code === 0 && data.data?.pic) {
-      return data.data.pic;
+    if (!response.ok) {
+      return { coverUrl: null, upName: null, title: null };
     }
     
-    return null;
+    const data = await response.json();
+    if (data.code === 0 && data.data) {
+      return {
+        coverUrl: data.data.pic || null,
+        upName: data.data.owner?.name || null,
+        title: data.data.title || null
+      };
+    }
+    
+    return { coverUrl: null, upName: null, title: null };
   } catch {
-    return null;
+    return { coverUrl: null, upName: null, title: null };
   }
 }
 
@@ -85,14 +98,15 @@ async function processBilibiliLink(blockId: number) {
     const videoId = extractVideoId(bilibiliUrl);
     if (!videoId) return;
     
-    orca.notify('info', '正在获取封面...');
+    orca.notify('info', '正在获取视频信息...');
     
-    const coverUrl = await getCoverUrl(videoId);
+    const videoInfo = await getVideoInfo(videoId);
     
-    if (coverUrl) {
+    if (videoInfo.coverUrl) {
+      // 插入封面图片
       const imageRepr = {
         type: "image",
-        src: coverUrl,
+        src: videoInfo.coverUrl,
         alt: "哔哩哔哩视频封面"
       };
       
@@ -105,10 +119,17 @@ async function processBilibiliLink(blockId: number) {
         imageRepr
       );
       
+      // 添加哔哩哔哩标签
       await orca.commands.invokeEditorCommand("core.editor.insertTag", null, blockId, '哔哩哔哩');
-      orca.notify('success', '成功提取封面！');
+      
+      // 添加UP主标签
+      if (videoInfo.upName) {
+        await orca.commands.invokeEditorCommand("core.editor.insertTag", null, blockId, `哔哩UP：${videoInfo.upName}`);
+      }
+      
+      orca.notify('success', `成功提取封面${videoInfo.upName ? `和UP主信息（${videoInfo.upName}）` : ''}！`);
     } else {
-      orca.notify('error', '获取封面失败');
+      orca.notify('error', '获取视频信息失败');
     }
     
   } catch (error) {
