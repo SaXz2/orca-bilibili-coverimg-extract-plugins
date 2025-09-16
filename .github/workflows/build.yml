@@ -3,6 +3,7 @@ name: Build and Release
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
   release:
@@ -36,21 +37,6 @@ jobs:
         retention-days: 30
         
     - name: Create Release
-      if: github.event_name == 'release'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          dist/index.js
-          dist/index.js.map
-          icon.png
-          README.md
-        generate_release_notes: true
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Create Release on Tag
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
