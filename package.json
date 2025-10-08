@@ -1,6 +1,6 @@
 {
   "name": "orca-bilibili-coverimg-extract-plugins",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "哔哩哔哩图片封面提取插件 - 自动提取B站视频封面并设置相关标签",
   "main": "dist/index.js",
   "scripts": {
