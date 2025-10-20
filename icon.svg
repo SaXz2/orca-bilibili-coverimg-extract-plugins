@@ -1,0 +1,20 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆形 -->
+  <circle cx="32" cy="32" r="30" fill="#00A1D6" stroke="#0084B4" stroke-width="2"/>
+  
+  <!-- 播放按钮主体 -->
+  <path d="M20 18 L20 46 L44 32 L20 18 Z" fill="white"/>
+  
+  <!-- 哔哩哔哩特色装饰 -->
+  <!-- 左上角小三角形 -->
+  <path d="M16 16 L20 20 L16 24 L16 16 Z" fill="#FF6B6B"/>
+  
+  <!-- 右上角小三角形 -->
+  <path d="M48 16 L52 20 L48 24 L48 16 Z" fill="#4ECDC4"/>
+  
+  <!-- 底部装饰线 -->
+  <rect x="18" y="48" width="28" height="2" rx="1" fill="white" opacity="0.8"/>
+  
+  <!-- 中心小圆点 -->
+  <circle cx="32" cy="32" r="3" fill="#00A1D6"/>
+</svg>

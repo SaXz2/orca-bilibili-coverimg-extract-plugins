@@ -33,8 +33,7 @@ interface VideoInfo {
 
 interface PluginSettings {
   insertImageBlock?: boolean;
-  useTextDate?: boolean;
-  optimizeLinkDisplay?: boolean;
+  insertVideoBlock?: boolean;
 }
 
 /**
@@ -214,7 +213,7 @@ async function processBilibiliLink(blockId: number, pluginName: string): Promise
     // 获取插件设置
     const settings = orca.state.plugins[pluginName]?.settings as PluginSettings | undefined;
     const shouldInsertImage = settings?.insertImageBlock !== false;
-    const useTextDate = settings?.useTextDate === true;
+    const shouldInsertVideo = settings?.insertVideoBlock === true;
     
     // 添加哔哩哔哩标签
     const tagsString = videoInfo.tags.join('|');
@@ -241,10 +240,8 @@ async function processBilibiliLink(blockId: number, pluginName: string): Promise
         [
           { name: "img", value: videoInfo.coverUrl, type: 1 },
           { name: "tags", value: tagsString, type: 1 },
-          ...(useTextDate 
-            ? [{ name: "publishDateText", value: videoInfo.publishDate || "", type: 1 }]
-            : [{ name: "publishDate", value: videoInfo.publishDate ? new Date(videoInfo.publishDate) : new Date(), type: 5 }]
-          )
+          { name: "publishDate", value: videoInfo.publishDate ? new Date(videoInfo.publishDate) : new Date(), type: 5 },
+          { name: "publishDateText", value: videoInfo.publishDate || "", type: 1 }
         ]
       );
     }
@@ -261,6 +258,18 @@ async function processBilibiliLink(blockId: number, pluginName: string): Promise
       );
     }
     
+    // 根据设置决定是否插入视频块
+    if (shouldInsertVideo) {
+      await orca.commands.invokeEditorCommand(
+        "core.editor.insertBlock",
+        null,
+        block,
+        "lastChild",
+        null,
+        { type: "video", src: bilibiliUrl, title: videoInfo.title || "哔哩哔哩视频" }
+      );
+    }
+    
     // 添加UP主标签
     if (videoInfo.upName) {
       await orca.commands.invokeEditorCommand(
@@ -271,8 +280,6 @@ async function processBilibiliLink(blockId: number, pluginName: string): Promise
       );
     }
     
-    // 为链接添加悬浮提示
-    addLinkTooltips(blockId);
     
     // 成功通知
     const messages = ['成功提取视频信息'];
@@ -316,8 +323,6 @@ function createPasteHandler(pluginName: string) {
 
 let pasteHandler: ((event: ClipboardEvent) => void) | null = null;
 let tagInitialized: boolean = false;
-let cssInjected: boolean = false;
-let linkObserver: MutationObserver | null = null;
 
 /**
  * 初始化"哔哩哔哩"标签块及其属性
@@ -379,141 +384,10 @@ async function initializeBilibiliTag() {
   }
 }
 
-/**
- * 注入或移除CSS样式
- * @param pluginName 插件名称
- * @param shouldInject 是否注入CSS
- */
-function manageCSSInjection(pluginName: string, shouldInject: boolean) {
-  if (shouldInject && !cssInjected) {
-    orca.themes.injectCSSResource(`${pluginName}/dist/styles/bilibili-link.css`, `${pluginName}-link-styles`);
-    cssInjected = true;
-  } else if (!shouldInject && cssInjected) {
-    orca.themes.removeCSSResources(`${pluginName}-link-styles`);
-    cssInjected = false;
-  }
-}
 
-/**
- * 为所有链接添加悬浮提示
- */
-function addTooltipsToAllLinks() {
-  try {
-    setTimeout(() => {
-      const links = document.querySelectorAll('a.orca-inline');
-      links.forEach((link: Element) => {
-        const anchor = link as HTMLAnchorElement;
-        if (anchor.href && !anchor.title) {
-          // 使用链接的文本内容作为悬浮提示
-          const linkText = anchor.textContent || anchor.innerText || anchor.href;
-          anchor.title = linkText;
-        }
-      });
-      console.log(`[哔哩哔哩插件] 为 ${links.length} 个链接添加了悬浮提示`);
-    }, 500);
-  } catch (error) {
-    console.error('[哔哩哔哩插件] 添加全局悬浮提示失败:', error);
-  }
-}
 
-/**
- * 设置链接悬浮提示观察器
- */
-function setupLinkTooltipObserver() {
-  try {
-    // 创建MutationObserver来监听DOM变化
-    linkObserver = new MutationObserver((mutations) => {
-      let hasNewLinks = false;
-      
-      mutations.forEach((mutation) => {
-        // 检查新增的节点
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const element = node as Element;
-            
-            // 检查新增的节点本身是否是链接
-            if (element.matches && element.matches('a.orca-inline')) {
-              addTooltipToLink(element as HTMLAnchorElement);
-              hasNewLinks = true;
-            }
-            
-            // 检查新增节点内的链接
-            const links = element.querySelectorAll ? element.querySelectorAll('a.orca-inline') : [];
-            links.forEach((link) => {
-              addTooltipToLink(link as HTMLAnchorElement);
-              hasNewLinks = true;
-            });
-          }
-        });
-      });
-      
-      if (hasNewLinks) {
-        console.log('[哔哩哔哩插件] 为动态加载的链接添加了悬浮提示');
-      }
-    });
-    
-    // 开始观察DOM变化
-    linkObserver.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-    
-    console.log('[哔哩哔哩插件] 链接悬浮提示观察器已启动');
-  } catch (error) {
-    console.error('[哔哩哔哩插件] 设置链接观察器失败:', error);
-  }
-}
 
-/**
- * 为单个链接添加悬浮提示
- */
-function addTooltipToLink(anchor: HTMLAnchorElement) {
-  if (anchor.href && !anchor.title) {
-    const linkText = anchor.textContent || anchor.innerText || anchor.href;
-    anchor.title = linkText;
-  }
-}
 
-/**
- * 为链接添加悬浮提示
- * @param blockId 块ID
- */
-function addLinkTooltips(blockId: number) {
-  try {
-    // 延迟执行，确保DOM已更新
-    setTimeout(() => {
-      // 尝试多种选择器来查找链接
-      const selectors = [
-        `[data-block-id="${blockId}"] a.orca-inline`,
-        `[data-block-id="${blockId}"] a`,
-        `.orca-block[data-block-id="${blockId}"] a.orca-inline`,
-        `.orca-block[data-block-id="${blockId}"] a`
-      ];
-      
-      let links: NodeListOf<Element> | null = null;
-      for (const selector of selectors) {
-        links = document.querySelectorAll(selector);
-        if (links.length > 0) break;
-      }
-      
-      if (links && links.length > 0) {
-        links.forEach((link: Element) => {
-          const anchor = link as HTMLAnchorElement;
-          if (anchor.href && !anchor.title) {
-            // 使用链接的文本内容作为悬浮提示
-            const linkText = anchor.textContent || anchor.innerText || anchor.href;
-            anchor.title = linkText;
-            console.log(`[哔哩哔哩插件] 为链接添加悬浮提示: ${linkText}`);
-          }
-        });
-      } else {
-        console.log(`[哔哩哔哩插件] 未找到块 ${blockId} 中的链接`);
-      }
-    }, 100);
-  } catch (error) {
-    console.error('[哔哩哔哩插件] 添加悬浮提示失败:', error);
-  }
-}
 
 /**
  * 插件加载函数
@@ -530,24 +404,14 @@ export async function load(pluginName: string) {
       type: 'boolean',
       defaultValue: true
     },
-    useTextDate: {
-      label: '使用文本日期',
-      description: '是否使用文本格式的发布日期（属性名为publishDateText）',
+    insertVideoBlock: {
+      label: '插入视频块',
+      description: '是否在块中插入视频块（使用B站链接作为视频源）',
       type: 'boolean',
       defaultValue: false
     },
-    optimizeLinkDisplay: {
-      label: '链接样式优化',
-      description: '优化包含哔哩哔哩标签的链接显示，支持文本截断和悬浮提示',
-      type: 'boolean',
-      defaultValue: true
-    }
   });
   
-  // 根据设置初始化CSS样式
-  const settings = orca.state.plugins[pluginName]?.settings as PluginSettings | undefined;
-  const shouldOptimizeLinks = settings?.optimizeLinkDisplay !== false;
-  manageCSSInjection(pluginName, shouldOptimizeLinks);
   
   // 编辑器命令
   orca.commands.registerEditorCommand(
@@ -592,24 +456,7 @@ export async function load(pluginName: string) {
   pasteHandler = createPasteHandler(pluginName);
   document.addEventListener('paste', pasteHandler);
   
-  // 为所有现有链接添加悬浮提示
-  addTooltipsToAllLinks();
   
-  // 监听DOM变化，为动态加载的链接添加悬浮提示
-  setupLinkTooltipObserver();
-  
-  // 监听设置变更
-  const originalSetSettings = orca.plugins.setSettings;
-  orca.plugins.setSettings = async (to: "app" | "repo", name: string, settings: any) => {
-    const result = await originalSetSettings(to, name, settings);
-    
-    // 如果当前插件的设置发生变更，更新CSS样式
-    if (name === pluginName && settings.optimizeLinkDisplay !== undefined) {
-      manageCSSInjection(pluginName, settings.optimizeLinkDisplay);
-    }
-    
-    return result;
-  };
   
   orca.notify('info', '哔哩哔哩插件已启用');
 }
@@ -623,17 +470,6 @@ export async function unload() {
     pasteHandler = null;
   }
   
-  // 清理CSS资源
-  if (cssInjected) {
-    orca.themes.removeCSSResources('orca-bilibili-coverimg-extract-plugins-link-styles');
-    cssInjected = false;
-  }
-  
-  // 清理链接观察器
-  if (linkObserver) {
-    linkObserver.disconnect();
-    linkObserver = null;
-  }
   
   tagInitialized = false;
 }
