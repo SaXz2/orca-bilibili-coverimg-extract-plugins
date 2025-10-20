@@ -48,7 +48,7 @@ jobs:
         
         # 复制必要文件到插件文件夹
         cp dist/index.js orca-bilibili-coverimg-extract-plugins/dist/
-        cp icon.png orca-bilibili-coverimg-extract-plugins/
+        cp icon.svg orca-bilibili-coverimg-extract-plugins/
         cp README.md orca-bilibili-coverimg-extract-plugins/
         
         # 显示插件文件夹结构

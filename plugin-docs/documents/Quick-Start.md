@@ -37,7 +37,7 @@ my-orca-plugin/
 │   ├── main.ts               # Entry file, contains plugin registration and initialization logic
 │   ├── orca.d.ts             # Plugin API type definition file
 │   └── styles/               # CSS style files
-├── icon.png                  # Plugin icon image
+├── icon.svg                  # Plugin icon image (SVG format supported)
 ├── package.json              # Project configuration
 ├── tsconfig.json             # TypeScript configuration
 ├── vite.config.js            # Vite build configuration (if using Vite)
@@ -51,7 +51,7 @@ The plugin name is the name of its containing folder. To deploy a plugin, place 
 The following files are the minimum required for a functional Orca Note plugin:
 
 - `dist/index.js`: The compiled JavaScript file containing the plugin logic.
-- `icon.png`: An icon representing the plugin in the Orca Note interface.
+- `icon.svg`: An icon representing the plugin in the Orca Note interface (SVG format supported).
 
 Ensure these files are present in your plugin folder before deployment.
 
