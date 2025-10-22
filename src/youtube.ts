@@ -254,10 +254,16 @@ export async function processYouTubeLink(blockId: number, pluginName: string): P
     }
     
     // 根据设置决定是否插入视频块
-    if (shouldInsertVideo && videoInfo.html) {
-      // 提取 iframe src 用于视频块
-      const iframeMatch = videoInfo.html.match(/src="([^"]+)"/);
-      const videoSrc = iframeMatch ? iframeMatch[1] : youtubeUrl;
+    if (shouldInsertVideo) {
+      let videoSrc = youtubeUrl;
+      
+      // 如果有 HTML 嵌入代码，尝试提取 iframe src
+      if (videoInfo.html) {
+        const iframeMatch = videoInfo.html.match(/src="([^"]+)"/);
+        if (iframeMatch) {
+          videoSrc = iframeMatch[1];
+        }
+      }
       
       await orca.commands.invokeEditorCommand(
         "core.editor.insertBlock",
