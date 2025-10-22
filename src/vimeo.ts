@@ -332,12 +332,22 @@ export async function processVimeoLink(blockId: number, pluginName: string): Pro
     
     // 添加作者标签（如果有作者信息）
     if (videoInfo.author) {
-      await orca.commands.invokeEditorCommand(
+      const authorTagId = await orca.commands.invokeEditorCommand(
         "core.editor.insertTag",
         null,
         blockId,
         `Vimeo作者：${videoInfo.author}`
       );
+      
+      // 为作者标签别名块添加"视频创作者"标签
+      if (authorTagId) {
+        await orca.commands.invokeEditorCommand(
+          "core.editor.insertTag",
+          null,
+          authorTagId,
+          "视频创作者"
+        );
+      }
     }
     
     // 成功通知

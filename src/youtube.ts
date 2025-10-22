@@ -20,6 +20,7 @@ export interface YouTubeVideoInfo {
   html: string | null;
   publishDate: string | null;
   tags: string[];
+  description: string | null;
 }
 
 export interface YouTubeDataAPIResponse {
@@ -28,6 +29,7 @@ export interface YouTubeDataAPIResponse {
       title: string;
       channelTitle: string;
       publishedAt: string;
+      description: string;
       tags?: string[];
       thumbnails: {
         default: { url: string };
@@ -121,7 +123,8 @@ export async function getYouTubeVideoDetails(videoId: string, apiKey: string): P
       thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || null,
       html: null, // Data API 不提供嵌入 HTML
       publishDate,
-      tags: snippet.tags || []
+      tags: snippet.tags || [],
+      description: snippet.description || null
     };
   } catch (error) {
     console.error('获取 YouTube 视频详细信息失败:', error);
@@ -155,7 +158,8 @@ export async function getYouTubeVideoInfo(videoUrl: string, apiKey?: string): Pr
         thumbnailUrl: null, 
         html: null, 
         publishDate: new Date().toISOString().split('T')[0],
-        tags: []
+        tags: [],
+        description: null
       };
     }
     
@@ -166,7 +170,8 @@ export async function getYouTubeVideoInfo(videoUrl: string, apiKey?: string): Pr
       thumbnailUrl: data.thumbnail_url || null,
       html: data.html || null,
       publishDate: new Date().toISOString().split('T')[0],
-      tags: []
+      tags: [],
+      description: null // oEmbed API 不提供描述信息
     };
   } catch (error) {
     console.error('获取 YouTube 视频信息失败:', error);
@@ -175,7 +180,8 @@ export async function getYouTubeVideoInfo(videoUrl: string, apiKey?: string): Pr
       thumbnailUrl: null, 
       html: null, 
       publishDate: new Date().toISOString().split('T')[0],
-      tags: []
+      tags: [],
+      description: null
     };
   }
 }
@@ -236,7 +242,8 @@ export async function processYouTubeLink(blockId: number, pluginName: string): P
           { name: "img", value: videoInfo.thumbnailUrl, type: 1 },
           { name: "tags", value: tagsString, type: 1 },
           { name: "publishDate", value: videoInfo.publishDate ? new Date(videoInfo.publishDate) : new Date(), type: 5 },
-          { name: "publishDateText", value: videoInfo.publishDate || new Date().toISOString().split('T')[0], type: 1 }
+          { name: "publishDateText", value: videoInfo.publishDate || new Date().toISOString().split('T')[0], type: 1 },
+          { name: "description", value: videoInfo.description || "", type: 1 }
         ]
       );
     }
@@ -277,12 +284,22 @@ export async function processYouTubeLink(blockId: number, pluginName: string): P
     
     // 添加博主标签（如果有频道信息）
     if (videoInfo.author) {
-      await orca.commands.invokeEditorCommand(
+      const bloggerTagId = await orca.commands.invokeEditorCommand(
         "core.editor.insertTag",
         null,
         blockId,
         `油管博主：${videoInfo.author}`
       );
+      
+      // 为博主标签别名块添加"视频创作者"标签
+      if (bloggerTagId) {
+        await orca.commands.invokeEditorCommand(
+          "core.editor.insertTag",
+          null,
+          bloggerTagId,
+          "视频创作者"
+        );
+      }
     }
     
     // 成功通知
@@ -340,6 +357,11 @@ export async function initializeYouTubeTag(): Promise<void> {
         },
         { 
           name: "publishDateText", 
+          value: "", 
+          type: 1  // PropType.Text
+        },
+        { 
+          name: "description", 
           value: "", 
           type: 1  // PropType.Text
         }

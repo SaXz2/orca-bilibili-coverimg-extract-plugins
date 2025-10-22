@@ -265,12 +265,22 @@ export async function processBilibiliLink(blockId: number, pluginName: string): 
     
     // 添加UP主标签
     if (videoInfo.upName) {
-      await orca.commands.invokeEditorCommand(
+      const upTagId = await orca.commands.invokeEditorCommand(
         "core.editor.insertTag",
         null,
         blockId,
         `哔哩UP：${videoInfo.upName}`
       );
+      
+      // 为UP主标签别名块添加"视频创作者"标签
+      if (upTagId) {
+        await orca.commands.invokeEditorCommand(
+          "core.editor.insertTag",
+          null,
+          upTagId,
+          "视频创作者"
+        );
+      }
     }
     
     // 成功通知
