@@ -12,6 +12,12 @@ https://vimeo.com/117125857
 - 创建 Vimeo 标签并设置属性
 
 技术细节：
-- 标签来源：Vimeo API 的 categories 字段
+- 标签来源：同时读取 tags 和 categories 字段
+  * tags：用户标签，添加 # 前缀（如 #tutorial）
+  * categories：分类标签，无前缀（如 Music）
 - 内嵌链接：优先使用 player_embed_url，回退到 oEmbed API
 - 发布日期：优先使用 release_time，回退到 created_time
+
+标签示例：
+- 用户标签：#tutorial #beginner #music
+- 分类标签：Music Education

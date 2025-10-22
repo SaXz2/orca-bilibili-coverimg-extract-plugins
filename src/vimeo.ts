@@ -46,6 +46,10 @@ export interface VimeoAPIResponse {
       link: string;
     }>;
   };
+  tags: Array<{
+    name: string;
+    uri: string;
+  }>;
   categories: Array<{
     name: string;
     uri: string;
@@ -162,7 +166,7 @@ export async function getVimeoEmbedUrl(videoUrl: string): Promise<string | null>
  */
 export async function getVimeoVideoInfo(videoId: string, accessToken: string, videoUrl?: string): Promise<VimeoVideoInfo> {
   try {
-    const url = `https://api.vimeo.com/videos/${videoId}?fields=uri,name,description,link,duration,width,height,created_time,modified_time,release_time,user.name,user.link,pictures.sizes,categories.name`;
+    const url = `https://api.vimeo.com/videos/${videoId}?fields=uri,name,description,link,duration,width,height,created_time,modified_time,release_time,user.name,user.link,pictures.sizes,tags.name,categories.name`;
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -204,11 +208,24 @@ export async function getVimeoVideoInfo(videoId: string, accessToken: string, vi
       embedUrl = await getVimeoEmbedUrl(videoUrl);
     }
     
+    // 合并 tags 和 categories，为标签添加 # 前缀
+    const allTags: string[] = [];
+    
+    // 添加 tags（用户标签）
+    if (data.tags) {
+      allTags.push(...data.tags.map(tag => `#${tag.name}`));
+    }
+    
+    // 添加 categories（分类）
+    if (data.categories) {
+      allTags.push(...data.categories.map(category => category.name));
+    }
+    
     return {
       thumbnailUrl,
       author: data.user?.name || null,
       title: data.name || null,
-      tags: data.categories?.map(category => category.name) || [],
+      tags: allTags,
       publishDate,
       embedUrl
     };
