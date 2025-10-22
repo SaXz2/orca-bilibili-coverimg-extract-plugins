@@ -3,7 +3,7 @@
  * 自动检测 YouTube 链接并提取视频信息、缩略图、频道信息等
  */
 
-const YOUTUBE_URL_REGEX = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+const YOUTUBE_URL_REGEX = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
 
 interface Block {
   id: number;
@@ -15,6 +15,7 @@ interface Block {
 }
 
 export interface YouTubeVideoInfo {
+  author: string | null;
   thumbnailUrl: string | null;
   html: string | null;
   publishDate: string | null;
@@ -116,6 +117,7 @@ export async function getYouTubeVideoDetails(videoId: string, apiKey: string): P
       new Date().toISOString().split('T')[0];
     
     return {
+      author: snippet.channelTitle || null,
       thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || null,
       html: null, // Data API 不提供嵌入 HTML
       publishDate,
@@ -149,6 +151,7 @@ export async function getYouTubeVideoInfo(videoUrl: string, apiKey?: string): Pr
     
     if (!response.ok) {
       return { 
+        author: null,
         thumbnailUrl: null, 
         html: null, 
         publishDate: new Date().toISOString().split('T')[0],
@@ -159,6 +162,7 @@ export async function getYouTubeVideoInfo(videoUrl: string, apiKey?: string): Pr
     const data = await response.json();
     
     return {
+      author: data.author_name || null,
       thumbnailUrl: data.thumbnail_url || null,
       html: data.html || null,
       publishDate: new Date().toISOString().split('T')[0],
@@ -167,6 +171,7 @@ export async function getYouTubeVideoInfo(videoUrl: string, apiKey?: string): Pr
   } catch (error) {
     console.error('获取 YouTube 视频信息失败:', error);
     return { 
+      author: null,
       thumbnailUrl: null, 
       html: null, 
       publishDate: new Date().toISOString().split('T')[0],
@@ -264,13 +269,18 @@ export async function processYouTubeLink(blockId: number, pluginName: string): P
       );
     }
     
+    // 添加博主标签（如果有频道信息）
+    if (videoInfo.author) {
+      await orca.commands.invokeEditorCommand(
+        "core.editor.insertTag",
+        null,
+        blockId,
+        `油管博主：${videoInfo.author}`
+      );
+    }
     
     // 成功通知
-    const messages = ['成功提取 YouTube 视频信息'];
-    if (videoInfo.tags.length > 0) messages.push(`标签数：${videoInfo.tags.length}`);
-    if (apiKey) messages.push('使用 Data API');
-    
-    orca.notify('success', messages.join(' | '));
+    orca.notify('success', '成功提取 YouTube 视频信息');
     
   } catch (error) {
     console.error('处理 YouTube 链接失败:', error);

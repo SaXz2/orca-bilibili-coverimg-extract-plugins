@@ -46,6 +46,7 @@
   - `tags`：视频标签（用 `|` 分隔，需要 API Key）
   - `publishDate`：发布日期（需要 API Key）
 - （可选）在块下方插入缩略图
+- 添加"油管博主：XXX"标签
 
 ### 2. 右键菜单提取
 
@@ -98,6 +99,11 @@
 - **publishDate** (日期)：发布日期（需要 API Key）
 - **publishDateText** (文本)：发布日期文本（需要 API Key）
 
+### 油管博主标签
+
+- 格式：`油管博主：{频道名称}`
+- 用于快速识别频道
+
 ## 支持的 URL 格式
 
 ### 哔哩哔哩
@@ -109,6 +115,7 @@
 - `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
 - `https://youtu.be/dQw4w9WgXcQ`
 - `https://youtube.com/watch?v=dQw4w9WgXcQ`
+- `https://www.youtube.com/shorts/_Ex--OvqMok` (YouTube Shorts)
 
 ## 技术架构
 

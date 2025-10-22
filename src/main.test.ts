@@ -430,6 +430,11 @@ describe('extractYouTubeVideoId', () => {
     expect(extractYouTubeVideoId(url)).toBe('dQw4w9WgXcQ');
   });
 
+  it('应该从YouTube Shorts链接中提取视频ID', () => {
+    const url = 'https://www.youtube.com/shorts/_Ex--OvqMok';
+    expect(extractYouTubeVideoId(url)).toBe('_Ex--OvqMok');
+  });
+
   it('应该从嵌入链接中提取视频ID', () => {
     const url = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
     expect(extractYouTubeVideoId(url)).toBe('dQw4w9WgXcQ');
@@ -457,6 +462,16 @@ describe('hasYouTubeLink', () => {
       id: 1,
       content: [
         { t: 't', v: 'https://youtu.be/dQw4w9WgXcQ' }
+      ]
+    };
+    expect(hasYouTubeLink(block)).toBe(true);
+  });
+
+  it('应该检测到YouTube Shorts链接', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 't', v: 'https://www.youtube.com/shorts/_Ex--OvqMok' }
       ]
     };
     expect(hasYouTubeLink(block)).toBe(true);
@@ -529,6 +544,7 @@ describe('getYouTubeVideoInfo', () => {
     const result = await getYouTubeVideoInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     
     expect(result).toEqual({
+      author: '测试频道',
       thumbnailUrl: 'https://example.com/thumb.jpg',
       html: '<iframe src="..."></iframe>',
       publishDate: expect.any(String),
@@ -561,6 +577,7 @@ describe('getYouTubeVideoInfo', () => {
     const result = await getYouTubeVideoInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'test-api-key');
     
     expect(result).toEqual({
+      author: '测试频道',
       thumbnailUrl: 'https://example.com/high.jpg',
       html: null,
       publishDate: '2023-01-01',
@@ -576,6 +593,7 @@ describe('getYouTubeVideoInfo', () => {
     const result = await getYouTubeVideoInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     
     expect(result).toEqual({
+      author: null,
       thumbnailUrl: null,
       html: null,
       publishDate: expect.any(String), // 现在返回当前日期字符串
