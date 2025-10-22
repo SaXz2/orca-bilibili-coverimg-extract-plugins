@@ -1,7 +1,7 @@
 {
   "name": "orca-bilibili-coverimg-extract-plugins",
   "version": "1.2.0",
-  "description": "视频信息提取插件 - 支持哔哩哔哩和 YouTube 视频信息提取，自动设置相关标签",
+  "description": "视频信息提取插件 - 支持哔哩哔哩、YouTube 和 Vimeo 视频信息提取，自动设置相关标签",
   "main": "dist/index.js",
   "scripts": {
     "build": "vite build",
@@ -17,6 +17,7 @@
     "plugin",
     "bilibili",
     "youtube",
+    "vimeo",
     "b站",
     "哔哩哔哩",
     "image",

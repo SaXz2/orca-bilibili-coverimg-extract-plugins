@@ -1,10 +1,11 @@
 /**
  * 视频信息提取插件
- * 支持哔哩哔哩和 YouTube 视频链接，自动提取视频信息、缩略图、频道信息等
+ * 支持哔哩哔哩、YouTube 和 Vimeo 视频链接，自动提取视频信息、缩略图、频道信息等
  */
 
 import { initializeBilibiliTag } from './bilibili';
 import { initializeYouTubeTag } from './youtube';
+import { initializeVimeoTag } from './vimeo';
 import { processVideoLink, hasVideoLink, createPasteHandler } from './video-processor';
 
 
@@ -23,7 +24,8 @@ export async function load(pluginName: string) {
   // 初始化标签
   await Promise.all([
     initializeBilibiliTag(),
-    initializeYouTubeTag()
+    initializeYouTubeTag(),
+    initializeVimeoTag()
   ]);
   
   // 注册插件设置
@@ -43,6 +45,12 @@ export async function load(pluginName: string) {
     youtubeApiKey: {
       label: 'YouTube Data API v3 密钥',
       description: '用于获取 YouTube 视频真实标签和发布日期的 API 密钥（可选，留空则使用基础模式）',
+      type: 'string',
+      defaultValue: ''
+    },
+    vimeoAccessToken: {
+      label: 'Vimeo 访问令牌',
+      description: '用于获取 Vimeo 视频信息的访问令牌（必需，可在 Vimeo 开发者控制台获取）',
       type: 'string',
       defaultValue: ''
     },

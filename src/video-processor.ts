@@ -3,8 +3,9 @@
  * 协调不同视频平台的处理逻辑
  */
 
-import { processBilibiliLink, hasBilibiliLink, extractBilibiliUrl } from './bilibili';
-import { processYouTubeLink, hasYouTubeLink, extractYouTubeUrl } from './youtube';
+import { processBilibiliLink, hasBilibiliLink } from './bilibili';
+import { processYouTubeLink, hasYouTubeLink } from './youtube';
+import { processVimeoLink, hasVimeoLink } from './vimeo';
 
 interface Block {
   id: number;
@@ -15,7 +16,7 @@ interface Block {
   }>;
 }
 
-export type VideoPlatform = 'bilibili' | 'youtube';
+export type VideoPlatform = 'bilibili' | 'youtube' | 'vimeo';
 
 /**
  * 检测块中包含的视频平台
@@ -29,6 +30,10 @@ export function detectVideoPlatform(block: Block): VideoPlatform | null {
   
   if (hasYouTubeLink(block)) {
     return 'youtube';
+  }
+  
+  if (hasVimeoLink(block)) {
+    return 'vimeo';
   }
   
   return null;
@@ -63,6 +68,9 @@ export async function processVideoLink(
     case 'youtube':
       await processYouTubeLink(blockId, pluginName);
       break;
+    case 'vimeo':
+      await processVimeoLink(blockId, pluginName);
+      break;
     default:
       orca.notify('error', '不支持的视频平台');
   }
@@ -74,7 +82,7 @@ export async function processVideoLink(
  * @returns 是否包含视频链接
  */
 export function hasVideoLink(block: Block): boolean {
-  return hasBilibiliLink(block) || hasYouTubeLink(block);
+  return hasBilibiliLink(block) || hasYouTubeLink(block) || hasVimeoLink(block);
 }
 
 /**
@@ -88,7 +96,7 @@ export function createPasteHandler(pluginName: string) {
     if (!text) return;
     
     // 检查是否包含视频链接
-    const hasVideo = /https?:\/\/(?:www\.)?(?:bilibili\.com\/video\/(?:BV|av)\w+|(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)[a-zA-Z0-9_-]{11})/i.test(text);
+    const hasVideo = /https?:\/\/(?:www\.)?(?:bilibili\.com\/video\/(?:BV|av)\w+|(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}|vimeo\.com\/\d+)/i.test(text);
     
     if (!hasVideo) return;
     
