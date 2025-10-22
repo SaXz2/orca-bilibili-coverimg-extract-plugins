@@ -1,7 +1,7 @@
 {
   "name": "orca-bilibili-coverimg-extract-plugins",
   "version": "1.2.0",
-  "description": "哔哩哔哩图片封面提取插件 - 自动提取B站视频封面并设置相关标签",
+  "description": "视频信息提取插件 - 支持哔哩哔哩和 YouTube 视频信息提取，自动设置相关标签",
   "main": "dist/index.js",
   "scripts": {
     "build": "vite build",
@@ -16,11 +16,13 @@
     "orca",
     "plugin",
     "bilibili",
+    "youtube",
     "b站",
     "哔哩哔哩",
     "image",
     "cover",
-    "video"
+    "video",
+    "thumbnail"
   ],
   "author": "SaXz2",
   "license": "MIT",

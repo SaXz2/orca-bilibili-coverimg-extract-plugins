@@ -1,5 +1,5 @@
 /**
- * 哔哩哔哩插件单元测试
+ * 视频信息提取插件单元测试
  */
 
 import {
@@ -9,7 +9,19 @@ import {
   getVideoInfo,
   getVideoTags,
   getCompleteVideoInfo
-} from './main';
+} from './bilibili';
+
+import {
+  extractYouTubeVideoId,
+  hasYouTubeLink,
+  extractYouTubeUrl,
+  getYouTubeVideoInfo
+} from './youtube';
+
+import {
+  detectVideoPlatform,
+  hasVideoLink
+} from './video-processor';
 
 // ==================== 工具函数测试 ====================
 
@@ -402,5 +414,238 @@ describe('getCompleteVideoInfo', () => {
       tags: [],
       publishDate: '2022-01-01'
     });
+  });
+});
+
+// ==================== YouTube 功能测试 ====================
+
+describe('extractYouTubeVideoId', () => {
+  it('应该从标准YouTube URL中提取视频ID', () => {
+    const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    expect(extractYouTubeVideoId(url)).toBe('dQw4w9WgXcQ');
+  });
+
+  it('应该从短链接中提取视频ID', () => {
+    const url = 'https://youtu.be/dQw4w9WgXcQ';
+    expect(extractYouTubeVideoId(url)).toBe('dQw4w9WgXcQ');
+  });
+
+  it('应该从嵌入链接中提取视频ID', () => {
+    const url = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+    expect(extractYouTubeVideoId(url)).toBe('dQw4w9WgXcQ');
+  });
+
+  it('无效URL应该返回null', () => {
+    expect(extractYouTubeVideoId('https://example.com')).toBe(null);
+    expect(extractYouTubeVideoId('not a url')).toBe(null);
+  });
+});
+
+describe('hasYouTubeLink', () => {
+  it('应该检测到链接fragment中的YouTube链接', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 'l', l: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', v: '视频' }
+      ]
+    };
+    expect(hasYouTubeLink(block)).toBe(true);
+  });
+
+  it('应该检测到文本中的YouTube链接', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 't', v: 'https://youtu.be/dQw4w9WgXcQ' }
+      ]
+    };
+    expect(hasYouTubeLink(block)).toBe(true);
+  });
+
+  it('没有YouTube链接的块应该返回false', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 't', v: 'https://www.bilibili.com/video/BV1xx411c7XD' }
+      ]
+    };
+    expect(hasYouTubeLink(block)).toBe(false);
+  });
+});
+
+describe('extractYouTubeUrl', () => {
+  it('应该从链接fragment中提取URL', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 'l', l: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', v: '视频' }
+      ]
+    };
+    expect(extractYouTubeUrl(block)).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  });
+
+  it('应该从文本中提取URL', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 't', v: 'https://youtu.be/dQw4w9WgXcQ' }
+      ]
+    };
+    expect(extractYouTubeUrl(block)).toBe('https://youtu.be/dQw4w9WgXcQ');
+  });
+
+  it('没有YouTube链接的块应该返回null', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 't', v: '普通文本' }
+      ]
+    };
+    expect(extractYouTubeUrl(block)).toBe(null);
+  });
+});
+
+describe('getYouTubeVideoInfo', () => {
+  beforeEach(() => {
+    global.fetch = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('应该成功获取YouTube视频信息（oEmbed模式）', async () => {
+    const mockResponse = {
+      author_name: '测试频道',
+      thumbnail_url: 'https://example.com/thumb.jpg',
+      html: '<iframe src="..."></iframe>'
+    };
+
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    });
+
+    const result = await getYouTubeVideoInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    
+    expect(result).toEqual({
+      thumbnailUrl: 'https://example.com/thumb.jpg',
+      html: '<iframe src="..."></iframe>',
+      publishDate: expect.any(String),
+      tags: []
+    });
+  });
+
+  it('应该成功获取YouTube视频信息（Data API模式）', async () => {
+    const mockResponse = {
+      items: [{
+        snippet: {
+          title: '测试视频标题',
+          channelTitle: '测试频道',
+          publishedAt: '2023-01-01T00:00:00Z',
+          tags: ['测试', '视频', '标签'],
+          thumbnails: {
+            high: { url: 'https://example.com/high.jpg' },
+            medium: { url: 'https://example.com/medium.jpg' },
+            default: { url: 'https://example.com/default.jpg' }
+          }
+        }
+      }]
+    };
+
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    });
+
+    const result = await getYouTubeVideoInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'test-api-key');
+    
+    expect(result).toEqual({
+      thumbnailUrl: 'https://example.com/high.jpg',
+      html: null,
+      publishDate: '2023-01-01',
+      tags: ['测试', '视频', '标签']
+    });
+  });
+
+  it('API失败时应该返回空信息', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: false
+    });
+
+    const result = await getYouTubeVideoInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    
+    expect(result).toEqual({
+      thumbnailUrl: null,
+      html: null,
+      publishDate: expect.any(String), // 现在返回当前日期字符串
+      tags: []
+    });
+  });
+});
+
+// ==================== 统一处理器测试 ====================
+
+describe('detectVideoPlatform', () => {
+  it('应该检测到哔哩哔哩链接', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 'l', l: 'https://www.bilibili.com/video/BV1xx411c7XD', v: '视频' }
+      ]
+    };
+    expect(detectVideoPlatform(block)).toBe('bilibili');
+  });
+
+  it('应该检测到YouTube链接', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 'l', l: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', v: '视频' }
+      ]
+    };
+    expect(detectVideoPlatform(block)).toBe('youtube');
+  });
+
+  it('没有视频链接的块应该返回null', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 't', v: '普通文本' }
+      ]
+    };
+    expect(detectVideoPlatform(block)).toBe(null);
+  });
+});
+
+describe('hasVideoLink', () => {
+  it('应该检测到哔哩哔哩链接', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 'l', l: 'https://www.bilibili.com/video/BV1xx411c7XD', v: '视频' }
+      ]
+    };
+    expect(hasVideoLink(block)).toBe(true);
+  });
+
+  it('应该检测到YouTube链接', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 'l', l: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', v: '视频' }
+      ]
+    };
+    expect(hasVideoLink(block)).toBe(true);
+  });
+
+  it('没有视频链接的块应该返回false', () => {
+    const block = {
+      id: 1,
+      content: [
+        { t: 't', v: '普通文本' }
+      ]
+    };
+    expect(hasVideoLink(block)).toBe(false);
   });
 });
