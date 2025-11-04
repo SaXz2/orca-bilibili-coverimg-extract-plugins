@@ -1,7 +1,7 @@
 {
-  "name": "orca-bilibili-coverimg-extract-plugins",
+  "name": "orca-video-info-extract-plugin",
   "version": "1.2.0",
-  "description": "视频信息提取插件 - 支持哔哩哔哩、YouTube 和 Vimeo 视频信息提取，自动设置相关标签",
+  "description": "Orca 视频信息提取插件 - 支持哔哩哔哩、YouTube 和 Vimeo 视频信息提取，自动设置相关标签",
   "main": "dist/index.js",
   "scripts": {
     "build": "vite build",
@@ -43,10 +43,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/SaXz2/orca-bilibili-coverimg-extract-plugins.git"
+    "url": "https://github.com/SaXz2/orca-video-info-extract-plugin.git"
   },
   "bugs": {
-    "url": "https://github.com/SaXz2/orca-bilibili-coverimg-extract-plugins/issues"
+    "url": "https://github.com/SaXz2/orca-video-info-extract-plugin/issues"
   },
-  "homepage": "https://github.com/SaXz2/orca-bilibili-coverimg-extract-plugins#readme"
+  "homepage": "https://github.com/SaXz2/orca-video-info-extract-plugin#readme"
 }

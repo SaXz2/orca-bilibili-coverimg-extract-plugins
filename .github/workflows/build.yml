@@ -43,27 +43,27 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       run: |
         # 创建插件文件夹
-        mkdir -p orca-bilibili-coverimg-extract-plugins/dist
-        mkdir -p orca-bilibili-coverimg-extract-plugins
+        mkdir -p orca-video-info-extract-plugin/dist
+        mkdir -p orca-video-info-extract-plugin
         
         # 复制必要文件到插件文件夹
-        cp dist/index.js orca-bilibili-coverimg-extract-plugins/dist/
-        cp icon.svg orca-bilibili-coverimg-extract-plugins/
-        cp README.md orca-bilibili-coverimg-extract-plugins/
+        cp dist/index.js orca-video-info-extract-plugin/dist/
+        cp icon.svg orca-video-info-extract-plugin/
+        cp README.md orca-video-info-extract-plugin/
         
         # 显示插件文件夹结构
         echo "Plugin folder structure:"
-        find orca-bilibili-coverimg-extract-plugins -type f | sort
+        find orca-video-info-extract-plugin -type f | sort
         
     - name: Create plugin ZIP package
       if: startsWith(github.ref, 'refs/tags/')
       run: |
         # 创建ZIP压缩包
-        zip -r orca-bilibili-coverimg-extract-plugins.zip orca-bilibili-coverimg-extract-plugins/
+        zip -r orca-video-info-extract-plugin.zip orca-video-info-extract-plugin/
         
         # 显示ZIP内容
         echo "ZIP package contents:"
-        unzip -l orca-bilibili-coverimg-extract-plugins.zip
+        unzip -l orca-video-info-extract-plugin.zip
         
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -84,6 +84,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./orca-bilibili-coverimg-extract-plugins.zip
-        asset_name: orca-bilibili-coverimg-extract-plugins.zip
+        asset_path: ./orca-video-info-extract-plugin.zip
+        asset_name: orca-video-info-extract-plugin.zip
         asset_content_type: application/zip

@@ -26,7 +26,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: 'src/main.ts',
-      name: 'OrcaBilibiliCoverimgExtractPlugins',
+      name: 'OrcaVideoInfoExtractPlugin',
       fileName: 'index',
       formats: ['es']
     },
