@@ -7,6 +7,7 @@ import { initializeBilibiliTag } from './bilibili';
 import { initializeYouTubeTag } from './youtube';
 import { initializeVimeoTag } from './vimeo';
 import { processVideoLink, hasVideoLink, createPasteHandler } from './video-processor';
+import { cleanupUnusedCreatorBlocks } from './cleanup-creators';
 
 
 
@@ -15,12 +16,15 @@ import { processVideoLink, hasVideoLink, createPasteHandler } from './video-proc
 
 
 let pasteHandler: ((event: ClipboardEvent) => void) | null = null;
+let pluginNameStorage: string | null = null;
 
 /**
  * 插件加载函数
  * @param pluginName 插件名称
  */
 export async function load(pluginName: string) {
+  pluginNameStorage = pluginName;
+  
   // 初始化标签
   await Promise.all([
     initializeBilibiliTag(),
@@ -73,6 +77,32 @@ export async function load(pluginName: string) {
     () => {},
     { label: '提取视频信息' }
   );
+
+  // 清理无引用创作者块命令
+  orca.commands.registerEditorCommand(
+    `${pluginName}.cleanupUnusedCreatorBlocks`,
+    async () => {
+      try {
+        orca.notify('info', '正在清理无引用的创作者块...');
+        const result = await cleanupUnusedCreatorBlocks();
+        
+        if (result.deletedBlockIds.length === 0) {
+          orca.notify('success', '没有需要清理的创作者块');
+        } else {
+          orca.notify(
+            'success', 
+            `已清理 ${result.statistics.deleted} 个无引用的创作者块`
+          );
+        }
+      } catch (error) {
+        console.error('清理创作者块失败:', error);
+        orca.notify('error', '清理失败，请查看控制台日志');
+      }
+      return null;
+    },
+    () => {},
+    { label: '清理无引用创作者块' }
+  );
   
   // 右键菜单
   orca.blockMenuCommands.registerBlockMenuCommand(`${pluginName}.extractVideoInfo`, {
@@ -110,4 +140,11 @@ export async function unload() {
     document.removeEventListener('paste', pasteHandler);
     pasteHandler = null;
   }
+  
+  if (pluginNameStorage) {
+    // 注销清理命令
+    orca.commands.unregisterCommand(`${pluginNameStorage}.cleanupUnusedCreatorBlocks`);
+  }
+  
+  pluginNameStorage = null;
 }
